@@ -2,44 +2,59 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const AudioTrack = ({ name, audioFile, onRemove }) => {
+const AudioTrack = ({ name, audioFile, onRemove, trackId }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [isLooping, setIsLooping] = useState(false);
+  const [waitTime, setWaitTime] = useState(0);
   const audioRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
-    audioRef.current = new Audio(URL.createObjectURL(audioFile));
-    audioRef.current.volume = volume;
-    audioRef.current.loop = isLooping;
+    // 新しいAudioインスタンスを作成
+    const newAudio = new Audio(URL.createObjectURL(audioFile));
+    newAudio.volume = volume;
+    newAudio.loop = false;
     
-    audioRef.current.addEventListener('ended', handleAudioEnd);
+    // エンドイベントリスナーを設定
+    const handleEnd = () => {
+      if (isLooping) {
+        setIsPlaying(false);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+          newAudio.currentTime = 0;
+          newAudio.play().then(() => {
+            setIsPlaying(true);
+          }).catch(error => console.error('再生エラー:', error));
+        }, waitTime);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    newAudio.addEventListener('ended', handleEnd);
+    audioRef.current = newAudio;
     
     return () => {
-      audioRef.current.removeEventListener('ended', handleAudioEnd);
-      audioRef.current.pause();
-      URL.revokeObjectURL(audioRef.current.src);
-      audioRef.current = null;
+      newAudio.removeEventListener('ended', handleEnd);
+      newAudio.pause();
+      URL.revokeObjectURL(newAudio.src);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [audioFile]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.loop = isLooping;
-    }
-  }, [isLooping]);
-
-  const handleAudioEnd = () => {
-    if (!isLooping) {
-      setIsPlaying(false);
-    }
-  };
+  }, [audioFile, isLooping, waitTime]); // 依存配列を修正
 
   const togglePlay = () => {
     if (isPlaying) {
       audioRef.current.pause();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(error => console.error('再生エラー:', error));
     }
     setIsPlaying(!isPlaying);
   };
@@ -52,6 +67,11 @@ const AudioTrack = ({ name, audioFile, onRemove }) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     audioRef.current.volume = newVolume;
+  };
+
+  const handleWaitTimeChange = (e) => {
+    const newWaitTime = parseInt(e.target.value, 10);
+    setWaitTime(newWaitTime);
   };
 
   return (
@@ -73,6 +93,17 @@ const AudioTrack = ({ name, audioFile, onRemove }) => {
         >
           🔁
         </button>
+        <div className="wait-time-control">
+          <input
+            type="number"
+            min="0"
+            step="100"
+            value={waitTime}
+            onChange={handleWaitTimeChange}
+            className="wait-time-input"
+            title="リピート前の待機時間(ms)"
+          /> ms
+        </div>
         <input
           type="range"
           min="0"
@@ -123,9 +154,11 @@ const FileUpload = ({ onFileUpload }) => {
 
 const App = () => {
   const [tracks, setTracks] = useState([]);
+  const trackCounter = useRef(0);  // トラックの一意のIDを生成するためのカウンター
 
   const handleFileUpload = (file) => {
     setTracks(prev => [...prev, {
+      id: trackCounter.current++,  // 一意のIDを割り当て
       name: file.name,
       audioFile: file
     }]);
@@ -140,9 +173,10 @@ const App = () => {
       <h1>マルチトラックプレイヤー</h1>
       <FileUpload onFileUpload={handleFileUpload} />
       <div className="tracks-container">
-        {tracks.map((track, index) => (
+        {tracks.map((track) => (
           <AudioTrack
-            key={index}
+            key={track.id}  // keyを一意のIDに変更
+            trackId={track.id}
             name={track.name}
             audioFile={track.audioFile}
             onRemove={handleRemoveTrack}
