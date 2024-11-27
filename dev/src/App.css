@@ -211,28 +211,38 @@ h1 {
   }
 
   .track-controls {
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-rows: auto auto;
     gap: 10px;
   }
 
-  .volume-slider {
-    width: 100%;
-    order: 2;
+  /* 1行目: 再生、ループ、削除ボタン */
+  .play-button {
+    grid-row: 1;
   }
 
+  .loop-button {
+    grid-row: 1;
+  }
+
+  .remove-button {
+    grid-row: 1;
+    margin-left: auto;  /* 右端に配置 */
+  }
+
+  /* 2行目: ウェイトタイムとボリューム */
   .wait-time-control {
-    width: 100%;
-    order: 3;
-    justify-content: flex-start;
+    grid-row: 2;
+    margin-right: 10px;
   }
 
-  .wait-time-input {
-    width: 80px;
+  .volume-slider {
+    grid-row: 2;
+    width: 120px;  /* スマートフォンでの適切な幅 */
   }
 
   .volume-label {
-    order: 4;
+    grid-row: 2;
   }
 }
 
