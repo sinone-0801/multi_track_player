@@ -189,84 +189,81 @@ h1 {
   height: 24px;
 }
 
-/* スマートフォン向けのメディアクエリ */
-@media screen and (max-width: 480px) {
-  .app-container {
-    padding: 10px;
-  }
-
+/* 縦長画面用のスタイル (2:3よりも縦長の場合) */
+@media screen and (max-aspect-ratio: 3/2) {
   .track-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 15px;
+    padding: 15px;
   }
 
   .track-info {
     min-width: 0;
-  }
-
-  .track-name {
-    font-size: 1em;
-    word-break: break-all;
+    margin-bottom: 10px;
   }
 
   .track-controls {
     display: grid;
     grid-template-rows: auto auto;
-    gap: 10px;
+    gap: 15px;
   }
 
-  /* 1行目: 再生、ループ、削除ボタン */
-  .play-button {
+  /* 上段のボタン類 */
+  .button-group {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
     grid-row: 1;
   }
 
+  .play-button,
   .loop-button {
-    grid-row: 1;
+    margin: 0;
   }
 
   .remove-button {
-    grid-row: 1;
-    margin-left: auto;  /* 右端に配置 */
+    margin-left: auto;
   }
 
-  /* 2行目: ウェイトタイムとボリューム */
+  /* 下段のコントロール類 */
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    grid-row: 2;
+  }
+
   .wait-time-control {
-    grid-row: 2;
-    margin-right: 10px;
-  }
-
-  .volume-slider {
-    grid-row: 2;
-    width: 120px;  /* スマートフォンでの適切な幅 */
-  }
-
-  .volume-label {
-    grid-row: 2;
-  }
-}
-
-/* タブレット向けのメディアクエリ */
-@media screen and (min-width: 481px) and (max-width: 768px) {
-  .app-container {
-    padding: 15px;
-  }
-
-  .track-container {
-    flex-wrap: wrap;
-  }
-
-  .track-info {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
-  .track-controls {
-    width: 100%;
-    justify-content: flex-start;
+    flex-shrink: 0;
   }
 
   .volume-slider {
     width: 120px;
+    flex-shrink: 0;
+  }
+}
+
+/* 小さな画面での追加調整 */
+@media screen and (max-width: 380px) {
+  .track-controls {
+    gap: 10px;
+  }
+
+  .button-group {
+    gap: 10px;
+  }
+
+  .control-group {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .volume-slider {
+    width: 100px;
+  }
+
+  .wait-time-input {
+    width: 60px;
   }
 }
